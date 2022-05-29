@@ -39,6 +39,7 @@ my_frame = Frame(second_frame)
 my_frame.grid(row=0,column=1,columnspan=4)
 my_scrollbar = Scrollbar(my_frame, orient=VERTICAL)
 
+
 first_frame = Frame(second_frame)
 first_frame.grid(row=0,column=0,padx=(10,30))
 
@@ -129,7 +130,7 @@ def open_Directory(value):
         my_scrollbar.pack(side=RIGHT, fill=Y)
         my_text.pack(pady=20,ipadx=300)
         v2.grid_forget()
-        my_label.grid_forget()
+        my_label.destroy()
         text_file = open(value, 'r', encoding='cp850', errors='ignore')
         stuff = text_file.read()
         my_text.delete("1.0", END)
@@ -140,8 +141,8 @@ def open_Directory(value):
 
     elif extn == "pdf":
         if value:
-
             my_text.pack_forget()
+            my_label.destroy()
             v1=pdf.ShowPdf()
             v2=v1.pdf_view(second_frame,pdf_location=open(value,"r"),width=77,height=100)
             v2.grid(row=0, column=1, pady=(0,0))
@@ -152,6 +153,7 @@ def open_Directory(value):
 
                 global my_img
                 v2.grid_forget()
+                my_label.destroy()
                 my_img = ImageTk.PhotoImage(Image.open(value))
                 my_label = Label(second_frame,image=my_img)
                 my_scrollbar.pack_forget()
@@ -161,6 +163,7 @@ def open_Directory(value):
                 Read_btn.grid_forget()
                 if isExist:
                     Read_btn.grid(row=1, column=1, pady=20, ipadx=150)
+                    isExist = True
 
     else:
         pass
