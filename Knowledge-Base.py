@@ -8,28 +8,39 @@ from os.path import isfile, join
 from PIL import ImageTk,Image
 from tkPDFViewer import tkPDFViewer as pdf
 import os
+import docx2txt
+
 
 
 
 root = Tk()
 root.title('KB')
 root.iconbitmap("icon.ico")
-root.geometry("1500x850")
+root.geometry("1500x850+50+50")
 
 
 ########################################################################################################################
 main_frame = Frame(root)
 main_frame.pack(fill=BOTH, expand=1)
 
+# Create Frame for X Scrollbar
+sec = Frame(main_frame)
+sec.pack(fill=X,side=BOTTOM)
+
 
 
 myCanavas = Canvas(main_frame)
 myCanavas.pack(side= LEFT, fill=BOTH, expand=1)
 
+x_scrollbar = ttk.Scrollbar(sec,orient=HORIZONTAL,command=myCanavas.xview)
+x_scrollbar.pack(side=BOTTOM,fill=X)
+
 my_scrollbar1 = ttk.Scrollbar(main_frame, orient=VERTICAL, command=myCanavas.yview)
 my_scrollbar1.pack(side=RIGHT, fill=Y)
 
 myCanavas.configure(yscrollcommand=my_scrollbar1.set)
+myCanavas.configure(xscrollcommand=x_scrollbar.set)
+
 myCanavas.bind('<Configure>', lambda e:myCanavas.configure(scrollregion = myCanavas.bbox("all")))
 
 second_frame = Frame(myCanavas)
@@ -105,6 +116,8 @@ def get_Font():
 global my_img
 global my_label
 global isExist
+global waspdf
+waspdf= False
 global v2
 v2 = Label()
 isExist=False
@@ -123,6 +136,7 @@ def open_Directory(value):
     global Read_btn
     global my_label
     global v2
+    global waspdf
     extn = get_extn(value)
     if extn == "txt":
 
@@ -136,8 +150,22 @@ def open_Directory(value):
         my_text.delete("1.0", END)
         my_text.insert(END, stuff)
         text_file.close()
-        Read_btn.grid_forget()
         Read_btn.grid(row=1, column=2, pady=20, ipadx=150)
+        print("txt btn")
+
+    elif extn == "docx":
+        my_scrollbar.config(command=my_text.yview)
+        my_scrollbar.pack(side=RIGHT, fill=Y)
+        my_text.pack(pady=20, ipadx=300)
+        v2.grid_forget()
+        my_label.destroy()
+        stuff = docx2txt.process(value)
+        my_text.delete("1.0", END)
+        my_text.insert(END, stuff)
+        Read_btn.grid(row=1, column=2, pady=20, ipadx=150)
+        print("docx btn")
+
+
 
     elif extn == "pdf":
         if value:
@@ -146,24 +174,25 @@ def open_Directory(value):
             v1=pdf.ShowPdf()
             v2=v1.pdf_view(second_frame,pdf_location=open(value,"r"),width=77,height=100)
             v2.grid(row=0, column=1, pady=(0,0))
-            Read_btn.grid(row=0, column=2, pady=20, ipadx=150)
+            Read_btn.grid(row=0, column=2,padx=30, pady=20, ipadx=150)
+            waspdf = True
+            print("pdf btn")
 
-    elif extn == "jpg":
-            if value:
+    elif extn == "jpg" or extn =="GIF" or extn =="png" or extn =="svg" or extn =="jpeg":
+        if value:
+            global my_img
+            v2.grid_forget()
+            my_label.destroy()
+            my_img = ImageTk.PhotoImage(Image.open(value))
+            my_label = Label(second_frame, image=my_img)
+            my_scrollbar.pack_forget()
+            my_text.pack_forget()
+            my_label.grid(row=0, column=1)
+            Read_btn.grid(row=1, column=1, pady=20, ipadx=150)
 
-                global my_img
-                v2.grid_forget()
-                my_label.destroy()
-                my_img = ImageTk.PhotoImage(Image.open(value))
-                my_label = Label(second_frame,image=my_img)
-                my_scrollbar.pack_forget()
-                my_text.pack_forget()
+            print("jpg btn")
 
-                my_label.grid(row=0,column=1)
-                Read_btn.grid_forget()
-                if isExist:
-                    Read_btn.grid(row=1, column=1, pady=20, ipadx=150)
-                    isExist = True
+
 
     else:
         pass
@@ -174,9 +203,14 @@ def Select_directory():
     global isExist
     global first_frame
     global Read_btn
+    global v2
+    global my_label
+    global waspdf
     mypath = filedialog.askdirectory(initialdir="D:/Studies", title="Get Directory")
 
     if mypath:
+        v2.grid_forget()
+        my_label.destroy()
         first_frame.destroy()
         first_frame = LabelFrame(second_frame, text=mypath, fg="BLUE")
         first_frame.grid(row=0, column=0, padx=(10, 30))
@@ -185,10 +219,18 @@ def Select_directory():
         for index in range(0, len(onlyfiles) ):
             Radiobutton(first_frame, text=onlyfiles[index], variable=File, value=mypath+"/"+onlyfiles[index]).pack(anchor=SW)
         my_text.insert(END," Select a File ....\n")
-        Read_btn = Button(second_frame, text="Open File", command=lambda:open_Directory(File.get()))
+        my_text.pack(pady=20, ipadx=300)
+
         if not isExist:
+            Read_btn = Button(second_frame, text="Open File", command=lambda: open_Directory(File.get()))
             Read_btn.grid(row=1 , column=3,pady=20, ipadx=150)
+            print("slct dir btn")
             isExist = True
+
+        if waspdf:
+            Read_btn.grid(row=1, column=3, pady=20, ipadx=150)
+            waspdf=False
+
         #open_Directory_btn.config(state=DISABLED)
     else:
         pass
