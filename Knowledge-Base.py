@@ -1,3 +1,4 @@
+import os
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
@@ -7,7 +8,8 @@ from os import listdir
 from os.path import isfile, join
 from PIL import ImageTk,Image
 from tkPDFViewer import tkPDFViewer as pdf
-import os
+import customtkinter
+
 import docx2txt
 
 
@@ -17,9 +19,15 @@ root = Tk()
 root.title('KB')
 root.iconbitmap("icon.ico")
 root.geometry("1500x850+50+50")
+root.config(bg='yellow')
+
+
+customtkinter.set_appearance_mode("dark")  # Modes: system (default), light, dark
+customtkinter.set_default_color_theme("green")
 
 
 ########################################################################################################################
+# setting the Scrolls and Frames
 main_frame = Frame(root)
 main_frame.pack(fill=BOTH, expand=1)
 
@@ -110,9 +118,9 @@ def get_Font():
 
 
 
-
-
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
 global my_img
 global my_label
 global isExist
@@ -120,9 +128,11 @@ global waspdf
 waspdf= False
 global v2
 v2 = Label()
+global mypath
+mypath=""
 isExist=False
 my_img = ImageTk.PhotoImage(Image.open("D:/Studies/img2.jpg"))
-
+global delete_btn
 my_label = Label(my_frame,image=my_img)
 
 
@@ -131,9 +141,10 @@ my_label = Label(my_frame,image=my_img)
 def get_extn(filename):
     return filename[filename.rfind('.') + 1:]
 
-def open_Directory(value):
+def open_File(value):
     global isExist
     global Read_btn
+    global delete_btn
     global my_label
     global v2
     global waspdf
@@ -150,8 +161,9 @@ def open_Directory(value):
         my_text.delete("1.0", END)
         my_text.insert(END, stuff)
         text_file.close()
-        Read_btn.grid(row=1, column=2, pady=20, ipadx=150)
-        print("txt btn")
+        Read_btn.grid(row=1, column=2, pady=20, ipadx=100)
+        delete_btn.grid(row=1, column=3, pady=20, ipadx=100)
+
 
     elif extn == "docx":
         my_scrollbar.config(command=my_text.yview)
@@ -162,8 +174,9 @@ def open_Directory(value):
         stuff = docx2txt.process(value)
         my_text.delete("1.0", END)
         my_text.insert(END, stuff)
-        Read_btn.grid(row=1, column=2, pady=20, ipadx=150)
-        print("docx btn")
+        Read_btn.grid(row=1, column=2, pady=20, ipadx=100)
+        delete_btn.grid(row=1, column=3, pady=20, ipadx=100)
+
 
 
 
@@ -174,23 +187,26 @@ def open_Directory(value):
             v1=pdf.ShowPdf()
             v2=v1.pdf_view(second_frame,pdf_location=open(value,"r"),width=77,height=100)
             v2.grid(row=0, column=1, pady=(0,0))
-            Read_btn.grid(row=0, column=2,padx=30, pady=20, ipadx=150)
+            Read_btn.grid(row=0, column=2,padx=30, pady=20, ipadx=20)
+            delete_btn.grid(row=0, column=3,padx=30, pady=20, ipadx=20)
+
             waspdf = True
-            print("pdf btn")
+
 
     elif extn == "jpg" or extn =="GIF" or extn =="png" or extn =="svg" or extn =="jpeg":
         if value:
             global my_img
             v2.grid_forget()
             my_label.destroy()
-            my_img = ImageTk.PhotoImage(Image.open(value))
+            my_img = ImageTk.PhotoImage(Image.open(value).resize((900,500),Image.Resampling.LANCZOS))
             my_label = Label(second_frame, image=my_img)
             my_scrollbar.pack_forget()
             my_text.pack_forget()
-            my_label.grid(row=0, column=1)
-            Read_btn.grid(row=1, column=1, pady=20, ipadx=150)
+            my_label.grid(row=0, column=1,columnspan=2)
+            Read_btn.grid(row=1, column=1, pady=20, ipadx=100)
+            delete_btn.grid(row=1, column=2, pady=20, ipadx=100)
 
-            print("jpg btn")
+
 
 
 
@@ -199,13 +215,64 @@ def open_Directory(value):
 
 ########################################################################################################################
 
+def Delete_file(value):
+    global isExist
+    global first_frame
+    global Read_btn
+    global delete_btn
+    global v2
+    global my_label
+    global waspdf
+    global mypath
+    os.remove(value)
+    if mypath:
+        v2.grid_forget()
+        my_label.destroy()
+        first_frame.destroy()
+        first_frame = LabelFrame(second_frame, text=mypath, fg="BLUE")
+        first_frame.grid(row=0, column=0, padx=(10, 30))
+        my_text.delete("1.0", END)
+        onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+        for index in range(0, len(onlyfiles) ):
+            Radiobutton(first_frame, text=onlyfiles[index], variable=File, value=mypath+"/"+onlyfiles[index]).pack(anchor=SW)
+        my_text.insert(END," Select a File ....\n")
+        my_text.pack(pady=20, ipadx=300)
+
+        if not isExist:
+            read_btn_img = ImageTk.PhotoImage(Image.open("read-btn.png").resize((50, 50), Image.Resampling.LANCZOS))
+            Read_btn = customtkinter.CTkButton(master=second_frame, text="Open",image=read_btn_img,
+                                               width=190,height=40,compound="left", command=lambda: open_File(File.get()))
+
+            delete_btn_img = ImageTk.PhotoImage(Image.open("delete.png").resize((50, 50), Image.Resampling.LANCZOS))
+            delete_btn = customtkinter.CTkButton(master=second_frame, text="Delete", image=delete_btn_img,
+                                               width=190, height=40, compound="left",
+                                               command=lambda: Delete_file(File.get()))
+
+            Read_btn.grid(row=1 , column=2,pady=20, ipadx=100)
+            delete_btn.grid(row=1 , column=3,pady=20, ipadx=100)
+            isExist = True
+
+        if waspdf:
+            Read_btn.grid(row=1, column=2, pady=20, ipadx=100)
+            delete_btn.grid(row=1, column=3, pady=20, ipadx=100)
+            waspdf=False
+
+        #open_Directory_btn.config(state=DISABLED)
+    else:
+        pass
+
+
+########################################################################################################################
+
 def Select_directory():
     global isExist
     global first_frame
     global Read_btn
+    global delete_btn
     global v2
     global my_label
     global waspdf
+    global mypath
     mypath = filedialog.askdirectory(initialdir="D:/Studies", title="Get Directory")
 
     if mypath:
@@ -222,14 +289,23 @@ def Select_directory():
         my_text.pack(pady=20, ipadx=300)
 
         if not isExist:
-            Read_btn = Button(second_frame, text="Open File", command=lambda: open_Directory(File.get()))
-            Read_btn.grid(row=1 , column=3,pady=20, ipadx=150)
-            print("slct dir btn")
+            read_btn_img = ImageTk.PhotoImage(Image.open("read-btn.png").resize((50, 50), Image.Resampling.LANCZOS))
+            Read_btn = customtkinter.CTkButton(master=second_frame, text="Open",image=read_btn_img,
+                                               width=190,height=40,compound="left", command=lambda: open_File(File.get()))
+
+            delete_btn_img = ImageTk.PhotoImage(Image.open("delete.png").resize((50, 50), Image.Resampling.LANCZOS))
+            delete_btn = customtkinter.CTkButton(master=second_frame, text="Delete", image=delete_btn_img,
+                                               width=190, height=40, compound="left",
+                                               command=lambda: Delete_file(File.get()))
+
+            Read_btn.grid(row=1 , column=2,pady=20, ipadx=100)
+            delete_btn.grid(row=1 , column=3,pady=20, ipadx=100)
             isExist = True
 
         if waspdf:
-            Read_btn.grid(row=1, column=3, pady=20, ipadx=150)
-            waspdf=False
+            Read_btn.grid(row=1, column=2, pady=20, ipadx=100)
+            delete_btn.grid(row=1, column=3, pady=20, ipadx=100)
+            waspdf = False
 
         #open_Directory_btn.config(state=DISABLED)
     else:
