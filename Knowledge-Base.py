@@ -19,11 +19,16 @@ root = Tk()
 root.title('KB')
 root.iconbitmap("icon.ico")
 root.geometry("1500x850+50+50")
-root.config(bg='yellow')
+
+
 
 
 customtkinter.set_appearance_mode("dark")  # Modes: system (default), light, dark
-customtkinter.set_default_color_theme("green")
+customtkinter.set_default_color_theme("dark-blue")
+global bg
+bg = ImageTk.PhotoImage(Image.open("salma1.png").resize((1920,1050),Image.Resampling.LANCZOS))
+
+
 
 
 ########################################################################################################################
@@ -51,16 +56,26 @@ myCanavas.configure(xscrollcommand=x_scrollbar.set)
 
 myCanavas.bind('<Configure>', lambda e:myCanavas.configure(scrollregion = myCanavas.bbox("all")))
 
-second_frame = Frame(myCanavas)
-myCanavas.create_window((0,0), window=second_frame, anchor="nw")
 
+##################################
+second_frame = Frame(myCanavas)
+myCanavas.create_image(0,0,image=bg,anchor="nw")
+myCanavas.create_window((50,50), window=second_frame, anchor="nw")
+
+
+
+#####################################
 my_frame = Frame(second_frame)
 my_frame.grid(row=0,column=1,columnspan=4)
 my_scrollbar = Scrollbar(my_frame, orient=VERTICAL)
 
 
+
 first_frame = Frame(second_frame)
 first_frame.grid(row=0,column=0,padx=(10,30))
+
+
+
 
 ########################################################################################################################
 global Size_Font
@@ -148,6 +163,7 @@ def open_File(value):
     global my_label
     global v2
     global waspdf
+    global bg
     extn = get_extn(value)
     if extn == "txt":
 
@@ -181,6 +197,7 @@ def open_File(value):
 
 
     elif extn == "pdf":
+
         if value:
             my_text.pack_forget()
             my_label.destroy()
@@ -338,12 +355,36 @@ def open_file():
 ########################################################################################################################
 
 def save_file():
+    global first_frame
+    global mypath
     text_file = filedialog.asksaveasfilename(initialdir="D:/Studies", title="Save Text File",filetypes=(("Text File","*.txt"),("All","*.*"),))
     if text_file:
+        dir_path = os.path.dirname(os.path.realpath(text_file))
+        new_path = list(dir_path)
         text_file = open(text_file,'w')
         text_file.write(my_text.get("1.0", END))
         text_file.close()
         my_text.delete(1.0, END)
+
+        for x in range (len(new_path)):
+            if new_path[x] == '\ '[0]:
+                new_path[x] = "/"
+        new_path = "".join(new_path)
+
+        if mypath == new_path:
+            first_frame.destroy()
+            first_frame = LabelFrame(second_frame, text=mypath, fg="BLUE")
+            first_frame.grid(row=0, column=0, padx=(10, 30))
+            my_text.delete("1.0", END)
+            onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+            for index in range(0, len(onlyfiles)):
+                Radiobutton(first_frame, text=onlyfiles[index], variable=File, value=mypath + "/" + onlyfiles[index]).pack(
+                    anchor=SW)
+            my_text.insert(END, " Select a File ....\n")
+            my_text.pack(pady=20, ipadx=300)
+
+
+
     else:
         pass
 
