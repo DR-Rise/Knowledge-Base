@@ -390,6 +390,21 @@ def save_file():
 
 
 ########################################################################################################################
+def new_file():
+    global v2
+    global my_text
+    my_scrollbar.config(command=my_text.yview)
+    my_scrollbar.pack(side=RIGHT, fill=Y)
+    my_text.pack(pady=20, ipadx=300)
+    v2.grid_forget()
+    my_text.delete("1.0", END)
+    Read_btn.grid(row=1, column=2, pady=20, ipadx=100)
+    delete_btn.grid(row=1, column=3, pady=20, ipadx=100)
+
+
+
+
+########################################################################################################################
 File = StringVar()
 File.set("*")
 
@@ -416,7 +431,7 @@ my_menu.add_cascade(label="File",menu=file_menu)
 file_menu.add_command(label="Open Directory",command=Select_directory)
 file_menu.add_separator()
 file_menu.add_command(label="Open File",command=open_file)
-file_menu.add_command(label="New File",command=lambda:my_text.delete("1.0", END))
+file_menu.add_command(label="New File",command=new_file)
 file_menu.add_command(label="Save File",command=save_file)
 
 view_menu = Menu(my_menu)
