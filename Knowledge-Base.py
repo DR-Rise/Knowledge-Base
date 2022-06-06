@@ -393,6 +393,8 @@ def save_file():
 def new_file():
     global v2
     global my_text
+    global first_frame
+    first_frame.grid_forget()
     my_scrollbar.config(command=my_text.yview)
     my_scrollbar.pack(side=RIGHT, fill=Y)
     my_text.pack(pady=20, ipadx=300)
